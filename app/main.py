@@ -3,10 +3,12 @@ import socket
 class DNSMessage:
     def __init__(self):
         self.header: DNSMessageHeader = DNSMessageHeader()
+        self.question: DNSQuestion = DNSQuestion('codecrafters.io', 1, 1)
 
     def get_message_bytes(self) -> bytes:
         message_bytes = b''
         message_bytes += self.header.get_header_bytes()
+        message_bytes += self.question.question_bytes
 
         return message_bytes
 
@@ -68,6 +70,36 @@ class DNSMessageHeader:
         # Sequence of bytes can be appended with one another, that's just what we did, grouping together the different header properties that conform a single byte
         # b'\x04' + b'\xd2' = b'\x04\xd2'
         return header_bytes
+
+class DNSQuestion:
+    def __init__(self, name, question_type, question_class):
+        self.__name: str = name
+        self.__type: int = question_type
+        self.__question_class = question_class
+
+    def set_name(self, readable_name: str):
+        self.__name = readable_name
+    def set_type(self, type: int):
+        self.__type = type
+    def set_question_class(self, question_class: int):
+        self.__type = type
+    
+    @property
+    def question_bytes(self) -> bytes:
+        question = b''
+        name_segments = name.split('.')
+
+        question_name = b''
+        for segment in name_segments:
+            question_name += len(segment).to_bytes(1, byteorder='big') + segment.encode('UTF-8')
+        question_name += b'\x00'
+
+        question += question_name + self.__type.to_bytes(2, byteorder='big') + self.__question_class.to_bytes(2, byteorder='big')
+        
+        return question
+
+
+    
 
 
 def main():
