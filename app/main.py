@@ -83,6 +83,7 @@ def main():
         try:
             buf, source = udp_socket.recvfrom(512)
             dns_message = DNSMessage()
+            print('DNSMessage class instantiated')
             response: bytes = dns_message.get_message_bytes()
     
             udp_socket.sendto(response, source)
