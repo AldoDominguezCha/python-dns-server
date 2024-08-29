@@ -87,7 +87,7 @@ class DNSQuestion:
     @property
     def question_bytes(self) -> bytes:
         question = b''
-        name_segments = name.split('.')
+        name_segments = self.__name.split('.')
 
         question_name = b''
         for segment in name_segments:
