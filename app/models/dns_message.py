@@ -1,5 +1,3 @@
-from . import dns_message_header
-
 class DNSMessage:
     def __init__(self):
         self.header: DNSMessageHeader = DNSMessageHeader()
