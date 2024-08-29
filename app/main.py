@@ -1,5 +1,5 @@
 import socket
-from models import dns_message
+from .models import dns_message
 
 
 def main():
