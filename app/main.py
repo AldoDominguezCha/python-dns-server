@@ -54,7 +54,7 @@ class DNSMessageHeader:
         header_bytes: bytes = b''
         # Get the bytes representation of the packet ID using two bytes (first parameter) as specified in the DNS protocol, encode
         # this number using the big-endian format (second parameter)
-        header_bytes =+ self.packet_id.to_bytes(2, byteorder='big')
+        header_bytes += self.packet_id.to_bytes(2, byteorder='big')
         # We need to form the next byte in the header composed of the following flags and values: QR, OPCODE, AA, TC, AND RD
         next_byte_as_binary_string = str(self.query_or_response_indicator) + '{0:04b}'.format(self.operation_code) + str(self.authoritative_answer) + str(self.truncation) + str(self.recursion_desired)
         header_bytes += int(next_byte_as_binary_string, 2).to_bytes(1, byteorder='big')
