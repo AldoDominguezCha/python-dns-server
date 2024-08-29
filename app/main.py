@@ -8,6 +8,7 @@ class DNSMessage:
     def get_message_bytes(self) -> bytes:
         message_bytes = b''
         message_bytes += self.header.get_header_bytes()
+        print(f'DNS response question section bytes: {self.question.question_bytes}')
         message_bytes += self.question.question_bytes
 
         return message_bytes
