@@ -44,7 +44,7 @@ class DNSMessageHeader:
         # Number of questions present in the question section of the DNS message.
         self.question_count = 0
         # Number of records present in the answer section of the DNS message.
-        self.answer_recod_count = 0
+        self.answer_record_count = 0
         # Number of records in the authority section of the DNS message.
         self.authority_record_count = 0
         # Number of records in the additional section of the DNS message.
@@ -62,9 +62,9 @@ class DNSMessageHeader:
         next_byte_as_binary_string = str(self.recursion_available) + '{0:03b}'.format(self.reserved) + '{0:04b}'.format(self.response_code)
         header_bytes += int(next_byte_as_binary_string, 2).to_bytes(1, byteorder='big')
         header_bytes += self.question_count.to_bytes(2, byteorder='big')
-        header_bytes += self.answer_recod_count.to_bytes(2, byteorder='big')
-        header_bytes += self.authority_recod_count.to_bytes(2, byteorder='big')
-        header_bytes += self.additional_recod_count.to_bytes(2, byteorder='big')
+        header_bytes += self.answer_record_count.to_bytes(2, byteorder='big')
+        header_bytes += self.authority_record_count.to_bytes(2, byteorder='big')
+        header_bytes += self.additional_record_count.to_bytes(2, byteorder='big')
 
         print(f'Header bytes: {header_bytes}')
 
