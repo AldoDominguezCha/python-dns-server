@@ -63,6 +63,8 @@ class DNSMessageHeader:
         header_bytes += self.authority_recod_count.to_bytes(2, byteorder='big')
         header_bytes += self.additional_recod_count.to_bytes(2, byteorder='big')
 
+        print(f'Header bytes: {header_bytes}')
+
         return header_bytes
 
 
