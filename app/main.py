@@ -67,6 +67,8 @@ class DNSMessageHeader:
 
         print(f'Message header bytes encoded: {header_bytes}')
 
+        # Sequence of bytes can be appended with one another, that's just what we did, grouping together the different header properties that conform a single byte
+        # b'\x04' + b'\xd2' = b'\x04\xd2'
         return header_bytes
 
 
@@ -83,7 +85,6 @@ def main():
         try:
             buf, source = udp_socket.recvfrom(512)
             dns_message = DNSMessage()
-            print('DNSMessage class instantiated')
             response: bytes = dns_message.get_message_bytes()
     
             udp_socket.sendto(response, source)
