@@ -4,11 +4,11 @@ class DNSMessage:
     def __init__(self):
         self.header: DNSMessageHeader = DNSMessageHeader()
         self.question: DNSQuestion = DNSQuestion('codecrafters.io', 1, 1)
+        self.header.set_question_count(1)
 
     def get_message_bytes(self) -> bytes:
         message_bytes = b''
         message_bytes += self.header.get_header_bytes()
-        print(f'DNS response question section bytes: {self.question.question_bytes}')
         message_bytes += self.question.question_bytes
 
         return message_bytes
@@ -49,6 +49,9 @@ class DNSMessageHeader:
         self.authority_record_count = 0
         # Number of records in the additional section of the DNS message.
         self.additional_record_count = 0
+    
+    def set_question_count(self, question_count):
+        self.question_count = question_count
 
     def get_header_bytes(self) -> bytes:
         header_bytes: bytes = b''
