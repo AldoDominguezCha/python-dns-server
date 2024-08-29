@@ -8,10 +8,9 @@ class DNSMessage:
 
     def get_message_bytes(self) -> bytes:
         message_bytes = b''
-        header_bytes = self.header.get_header_bytes()
-        print(f'Inside of get_message_bytes, header bytes: {header_bytes}')
+        message_bytes += self.header.get_header_bytes()
 
-        return header_bytes
+        return message_bytes
 
 class DNSMessageHeader:
     """This is the DNS message header class"""
@@ -66,7 +65,7 @@ class DNSMessageHeader:
         header_bytes += self.authority_record_count.to_bytes(2, byteorder='big')
         header_bytes += self.additional_record_count.to_bytes(2, byteorder='big')
 
-        print(f'Header bytes: {header_bytes}')
+        print(f'Message header bytes encoded: {header_bytes}')
 
         return header_bytes
 
