@@ -8,9 +8,10 @@ class DNSMessage:
 
     def get_message_bytes(self) -> bytes:
         message_bytes = b''
-        message_bytes += self.header.get_header_bytes()
+        header_bytes = self.header.get_header_bytes()
+        print(f'Inside of get_message_bytes, header bytes: {header_bytes}')
 
-        return message_bytes
+        return header_bytes
 
 class DNSMessageHeader:
     """This is the DNS message header class"""
