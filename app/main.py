@@ -147,6 +147,7 @@ class DNSRecord:
         return self.preamble.preamble_bytes + encoded_ip
 
 
+@label_sequence
 class DNSRecordPreamble:
     def __init__(self, domain_name, record_type, record_class, time_to_live, data_length):
         self.__domain_name: str = domain_name
