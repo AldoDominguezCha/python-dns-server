@@ -1,7 +1,7 @@
 import socket
 
 '''
-Using this decorator we are extending the parameter class, we re generating a new subclass with an additional method
+Using this decorator we are extending the parameter class, we are generating a new subclass with an additional method
 to get the label sequence as bytes. This is unnecessary in reality, as simple inheritance would have sufficed using 
 LabelSequenceParser as the base class, but it's an interesting example about applying decorators to a class instead of
 a function.
@@ -27,14 +27,24 @@ def label_sequence(cls):
 class DNSMessage:
     def __init__(self):
         self.header: DNSMessageHeader = DNSMessageHeader()
-        self.question: DNSQuestion = DNSQuestion('codecrafters.io', 1, 1)
-        print(f'Type of question: {type(self.question)}')
-        self.header.set_question_count(1)
+        # It's a list of questions
+        self.questions = []
+        # It's a list of answer records to the questions
+        self.answers = []
+    
+    def add_message_question(self, dns_question):
+        self.questions.append(dns_question)
+        self.header.increment_question_count()
 
+    def add_message_answer(self, dns_record):
+        self.answers.append(dns_record)
+        self.increment_answer_count()
+    
     def get_message_bytes(self) -> bytes:
         message_bytes = b''
         message_bytes += self.header.get_header_bytes()
-        message_bytes += self.question.question_bytes
+        message_bytes += ''.join([question.question_bytes for question in self.questions])
+        message_bytes += ''.join([record.get_record_bytes() for record in self.answers])
 
         return message_bytes
 
@@ -75,8 +85,11 @@ class DNSMessageHeader:
         # Number of records in the additional section of the DNS message.
         self.additional_record_count = 0
     
-    def set_question_count(self, question_count):
-        self.question_count = question_count
+    def increment_question_count(self):
+        self.question_count += 1
+
+    def increment_answer_count(self):
+        self.answer_record_count += 1
 
     def get_header_bytes(self) -> bytes:
         header_bytes: bytes = b''
@@ -126,6 +139,12 @@ class DNSRecord:
     def __init__(self, preamble, ip_address: str):
         self.preamble = preamble
         self.ip = ip_address
+    
+    def get_record_bytes(self):
+        encoded_ip = ''.join(int(ip_byte).to_bytes(1, byteorder='big') for ip_byte in self.ip.slice('.'))
+        print(f'Encoded IP obtained in DNS record: {encoded_ip}')
+
+        return self.preamble.preamble_bytes + encoded_ip
 
 
 class DNSRecordPreamble:
@@ -138,7 +157,11 @@ class DNSRecordPreamble:
 
     @property
     def preamble_bytes(self):
-        preamble_bytes: bytes = b''
+        preamble_bytes: bytes = self.get_label_sequence_bytes(self.__domain_name)
+        preamble_bytes += self.__record_type.to_bytes(2, byteorder='big')
+        preamble_bytes += self.__record_class.to_bytes(2, byteorder='big')
+        preamble_bytes += self.__TTL.to_bytes(4, byteorder='big')
+        preamble_bytes += self.__data_length.to_bytes(2, byteorder='big')
 
 
 
@@ -149,7 +172,12 @@ def main():
     while True:
         try:
             buf, source = udp_socket.recvfrom(512)
+            # Build DNS response message
             dns_message = DNSMessage()
+            dns_message.add_message_question(DNSQuestion('codecrafters.io', 1, 1))
+            dns_message.add_message_answer(DNSRecord(DNSRecordPreamble('codecrafters.io', 1, 1, 60, 4), '8.8.8.8'))
+
+
             response: bytes = dns_message.get_message_bytes()
     
             udp_socket.sendto(response, source)
