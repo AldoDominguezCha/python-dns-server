@@ -46,7 +46,7 @@ class DNSMessageWriter(object):
     
     @staticmethod
     def get_question_bytes(question: DNSQuestion) -> bytes:
-        question_name = DNSMessageWriter.__encode_label_sequence(self.__domain_name)
+        question_name = DNSMessageWriter.__encode_label_sequence(question.domain_name)
         question_bytes: bytes = question_name + DNSMessageWriter.__encode(question.record_type, 2) + DNSMessageWriter.__encode(question.question_class, 2)
         
         return question
