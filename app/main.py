@@ -86,7 +86,7 @@ class DNSMessageParser(object):
         self.parse_message_header()
 
     def parse_message_header(self):
-        header_bytes = self.raw_dns_message[0:16]
+        header_bytes = self.__raw_dns_message[0:16]
 
         packet_id = int.from_bytes(header_bytes)
         prinf(f'Found ID in parsed message: {packet_id}')
