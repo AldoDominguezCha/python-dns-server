@@ -38,7 +38,7 @@ class DNSMessage:
 
     def add_message_answer(self, dns_record):
         self.answers.append(dns_record)
-        self.increment_answer_count()
+        self.header.increment_answer_count()
     
     def get_message_bytes(self) -> bytes:
         message_bytes = b''
