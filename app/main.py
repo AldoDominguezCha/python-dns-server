@@ -15,6 +15,8 @@ def label_sequence(cls):
 
             return label_sequence
 
+    return LabelSequenceParser
+
 
 class DNSMessage:
     def __init__(self):
