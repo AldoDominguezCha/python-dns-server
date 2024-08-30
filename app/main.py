@@ -83,13 +83,14 @@ class DNSMessageParser(object):
     def __init__(self, raw_dns_message: bytes):
         self.__raw_message = raw_dns_message
         # self.message = DNSMessage()
-        self.parse_message_header()
 
-    def parse_message_header(self):
+    def parse_message_id(self):
         header_bytes = self.__raw_message[0:16]
 
         packet_id = int.from_bytes(header_bytes[0:2])
         print(f'Found ID in parsed message: {packet_id}')
+
+        return packet_id
 
 
 
@@ -183,8 +184,9 @@ def main():
             # Build DNS response message
             # TODO: Create a writer class for this
             parser = DNSMessageParser(buf)
+            packet_id = parser.parse_message_id()
 
-            dns_response_message = DNSMessage(1234, 1)
+            dns_response_message = DNSMessage(packet_id, 1)
             dns_response_message.add_message_question(DNSQuestion('codecrafters.io', 1, 1))
             dns_response_message.add_message_answer(DNSRecord(DNSRecordPreamble('codecrafters.io', 1, 1, 60, 4), '8.8.8.8'))
 
