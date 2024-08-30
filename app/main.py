@@ -43,8 +43,8 @@ class DNSMessage:
     def get_message_bytes(self) -> bytes:
         message_bytes = b''
         message_bytes += self.header.get_header_bytes()
-        message_bytes += ''.join([question.question_bytes for question in self.questions])
-        message_bytes += ''.join([record.get_record_bytes() for record in self.answers])
+        message_bytes += b''.join([question.question_bytes for question in self.questions])
+        message_bytes += b''.join([record.get_record_bytes() for record in self.answers])
 
         return message_bytes
 
@@ -141,7 +141,7 @@ class DNSRecord:
         self.ip = ip_address
     
     def get_record_bytes(self):
-        encoded_ip = ''.join(int(ip_byte).to_bytes(1, byteorder='big') for ip_byte in self.ip.slice('.'))
+        encoded_ip = b''.join(int(ip_byte).to_bytes(1, byteorder='big') for ip_byte in self.ip.slice('.'))
         print(f'Encoded IP obtained in DNS record: {encoded_ip}')
 
         return self.preamble.preamble_bytes + encoded_ip
