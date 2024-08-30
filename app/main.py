@@ -49,7 +49,7 @@ class DNSMessageWriter(object):
         question_name = DNSMessageWriter.__encode_label_sequence(question.domain_name)
         question_bytes: bytes = question_name + DNSMessageWriter.__encode(question.record_type, 2) + DNSMessageWriter.__encode(question.question_class, 2)
         
-        return question
+        return question_bytes
         
     @staticmethod
     def get_preamble_bytes(preamble: DNSRecordPreamble) -> bytes:
