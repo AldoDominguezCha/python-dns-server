@@ -164,6 +164,8 @@ class DNSRecordPreamble:
         preamble_bytes += self.__TTL.to_bytes(4, byteorder='big')
         preamble_bytes += self.__data_length.to_bytes(2, byteorder='big')
 
+        return preamble_bytes
+
 
 
 def main():
