@@ -114,7 +114,7 @@ class DNSQuestion:
         return question
 
 class DNSRecord:
-    def __init__(self, preamble: DNSRecordPreamble, ip_address: str):
+    def __init__(self, preamble, ip_address: str):
         self.preamble = preamble
         self.ip = ip_address
 
