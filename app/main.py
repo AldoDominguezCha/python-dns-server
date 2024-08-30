@@ -1,5 +1,11 @@
 import socket
 
+'''
+Using this decorator we are extending the parameter class, we re generating a new subclass with an additional method
+to get the label sequence as bytes. This is unnecessary in reality, as simple inheritance would have sufficed using 
+LabelSequenceParser as the base class, but it's an interesting example about applying decorators to a class instead of
+a function.
+'''
 def label_sequence(cls):
     class LabelSequenceParser(cls):
         def __init__(self, *args, **kargs):
@@ -22,6 +28,7 @@ class DNSMessage:
     def __init__(self):
         self.header: DNSMessageHeader = DNSMessageHeader()
         self.question: DNSQuestion = DNSQuestion('codecrafters.io', 1, 1)
+        print(f'Type of question: {type(self.question)}')
         self.header.set_question_count(1)
 
     def get_message_bytes(self) -> bytes:
