@@ -71,10 +71,7 @@ class DNSMessageWriter(object):
     
     @staticmethod
     def encode_message(dns_message: DNSMessage) -> bytes:
-        header_bytes: bytes = DNSMessageWriter.get_header_bytes(dns_message.header)
-
-        message_bytes = b''
-        message_bytes += self.header.get_header_bytes()
+        message_bytes: bytes = DNSMessageWriter.get_header_bytes(dns_message.header)
         message_bytes += b''.join([DNSMessageWriter.get_question_bytes(question) for question in dns_message.questions])
         message_bytes += b''.join([DNSMessageWriter.get_record_bytes(record) for record in dns_message.answers])
 
