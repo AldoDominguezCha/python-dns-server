@@ -141,7 +141,7 @@ class DNSRecord:
         self.ip = ip_address
     
     def get_record_bytes(self):
-        encoded_ip = b''.join(int(ip_byte).to_bytes(1, byteorder='big') for ip_byte in self.ip.slice('.'))
+        encoded_ip = b''.join(int(ip_byte).to_bytes(1, byteorder='big') for ip_byte in self.ip.split('.'))
         print(f'Encoded IP obtained in DNS record: {encoded_ip}')
 
         return self.preamble.preamble_bytes + encoded_ip
