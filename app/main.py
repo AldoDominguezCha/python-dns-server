@@ -82,6 +82,14 @@ class DNSMessageWriter(object):
 class DNSMessageParser(object):
     def __init__(self, raw_dns_message: bytes):
         self.__raw_message = raw_dns_message
+        # self.message = DNSMessage()
+        self.parse_message_header()
+
+    def parse_message_header(self):
+        header_bytes = raw_dns_message[0:16]
+
+        packet_id = int.from_bytes(header_bytes)
+        prinf(f'Found ID in parsed message: {packet_id}')
 
 
 
@@ -174,6 +182,8 @@ def main():
             buf, source = udp_socket.recvfrom(512)
             # Build DNS response message
             # TODO: Create a writer class for this
+            parser = DNSMessageParser(buf)
+
             dns_response_message = DNSMessage(1234, 1)
             dns_response_message.add_message_question(DNSQuestion('codecrafters.io', 1, 1))
             dns_response_message.add_message_answer(DNSRecord(DNSRecordPreamble('codecrafters.io', 1, 1, 60, 4), '8.8.8.8'))
