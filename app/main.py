@@ -11,7 +11,7 @@ def label_sequence(cls):
         def __init__(self, *args, **kargs):
             super().__init__(*args, **kargs)
 
-        def get_label_sequence_bytes(domain_name: str):
+        def get_label_sequence_bytes(self, domain_name: str):
             label_sequence = b''
 
             name_segments = domain_name.split('.')
