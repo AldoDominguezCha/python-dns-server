@@ -141,10 +141,10 @@ class DNSMessageHeader:
         return self.__additional_record_count
     
     def increment_question_count(self):
-        self.question_count += 1
+        self.__question_count += 1
 
     def increment_answer_count(self):
-        self.answer_record_count += 1
+        self.__answer_record_count += 1
         
 class DNSQuestion:
     def __init__(self, domain_name, record_type, question_class):
