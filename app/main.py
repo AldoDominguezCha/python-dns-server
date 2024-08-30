@@ -66,7 +66,7 @@ class DNSMessageWriter(object):
         encoded_ip = b''.join(DNSMessageWriter.__encode(int(ip_byte), 1) for ip_byte in record.ip.split('.'))
         print(f'Encoded IP obtained in DNS record: {encoded_ip}')
 
-        return record.preamble.preamble_bytes + encoded_ip
+        return DNSMessageWriter.get_preamble_bytes(record.preamble) + encoded_ip
     
     
     @staticmethod
