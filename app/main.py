@@ -1,5 +1,21 @@
 import socket
 
+def label_sequence(cls):
+    class LabelSequenceParser(cls):
+        def __init__(self, *args, **kargs):
+            super().__init__(*args, **kargs)
+
+        def get_label_sequence_bytes(domain_name: str):
+            label_sequence = b''
+
+            name_segments = domain_name.split('.')
+            for segment in name_segments:
+                label_sequence += len(segment).to_bytes(1, byteorder='big') + segment.encode('UTF-8')
+            label_sequence += b'\x00'
+
+            return label_sequence
+
+
 class DNSMessage:
     def __init__(self):
         self.header: DNSMessageHeader = DNSMessageHeader()
@@ -75,35 +91,46 @@ class DNSMessageHeader:
         # b'\x04' + b'\xd2' = b'\x04\xd2'
         return header_bytes
 
+@label_sequence
 class DNSQuestion:
-    def __init__(self, name, question_type, question_class):
-        self.__name: str = name
-        self.__type: int = question_type
-        self.__question_class = question_class
+    def __init__(self, domain_name, record_type, question_class):
+        self.__domain_name: str = domain_name
+        self.__record_type: int = record_type
+        self.__question_class: int = question_class
 
-    def set_name(self, readable_name: str):
-        self.__name = readable_name
-    def set_type(self, type: int):
-        self.__type = type
+    def set_domain_name(self, readable_domain_name: str):
+        self.__domain_name = readable_domain_name
+    def set_type(self, record_type: int):
+        self.__record_type = record_type
     def set_question_class(self, question_class: int):
-        self.__type = type
+        self.__question_class = question_class
     
     @property
     def question_bytes(self) -> bytes:
         question = b''
-        name_segments = self.__name.split('.')
-
-        question_name = b''
-        for segment in name_segments:
-            question_name += len(segment).to_bytes(1, byteorder='big') + segment.encode('UTF-8')
-        question_name += b'\x00'
-
-        question += question_name + self.__type.to_bytes(2, byteorder='big') + self.__question_class.to_bytes(2, byteorder='big')
+        question_name = self.get_label_sequence_bytes(self.__domain_name)
+        question += question_name + self.__record_type.to_bytes(2, byteorder='big') + self.__question_class.to_bytes(2, byteorder='big')
         
         return question
 
+class DNSRecord:
+    def __init__(self, preamble: DNSRecordPreamble, ip_address: str):
+        self.preamble = preamble
+        self.ip = ip_address
 
-    
+
+class DNSRecordPreamble:
+    def __init__(self, domain_name, record_type, record_class, time_to_live, data_length):
+        self.__domain_name: str = domain_name
+        self.__record_type: int = record_type
+        self.__record_class = record_class
+        self.__TTL = time_to_live
+        self.__data_length = data_length
+
+    @property
+    def preamble_bytes(self):
+        preamble_bytes: bytes = b''
+
 
 
 def main():
