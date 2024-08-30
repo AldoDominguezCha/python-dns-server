@@ -3,11 +3,11 @@ import socket
 '''
 Using this decorator we are extending the parameter class, we are generating a new subclass with an additional method
 to get the label sequence as bytes. This is unnecessary in reality, as simple inheritance would have sufficed using 
-LabelSequenceParser as the base class, but it's an interesting example about applying decorators to a class instead of
+LabelSequenceEncoder as the base class, but it's an interesting example about applying decorators to a class instead of
 a function.
 '''
 def label_sequence(cls):
-    class LabelSequenceParser(cls):
+    class LabelSequenceEncoder(cls):
         def __init__(self, *args, **kargs):
             super().__init__(*args, **kargs)
 
@@ -21,7 +21,7 @@ def label_sequence(cls):
 
             return label_sequence
 
-    return LabelSequenceParser
+    return LabelSequenceEncoder
 
 
 class DNSMessage:
@@ -176,6 +176,7 @@ def main():
         try:
             buf, source = udp_socket.recvfrom(512)
             # Build DNS response message
+            # TODO: Create a writer class for this
             dns_message = DNSMessage()
             dns_message.add_message_question(DNSQuestion('codecrafters.io', 1, 1))
             dns_message.add_message_answer(DNSRecord(DNSRecordPreamble('codecrafters.io', 1, 1, 60, 4), '8.8.8.8'))
