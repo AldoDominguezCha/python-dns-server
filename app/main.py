@@ -246,8 +246,11 @@ def main():
             message.header.recursion_available = 0
             message.header.reserved = 0
             message.header.response_code = 0 if not message.header.operation_code else 4
-            # message.add_message_question(DNSQuestion('codecrafters.io', 1, 1))
-            # message.add_message_answer(DNSRecord(DNSRecordPreamble('codecrafters.io', 1, 1, 60, 4), '8.8.8.8'))
+            message.add_message_question(DNSQuestion('codecrafters.io', 1, 1))
+            message.add_message_answer(DNSRecord(DNSRecordPreamble('codecrafters.io', 1, 1, 60, 4), '8.8.8.8'))
+
+            message.header.question_count = 1
+            message.header.answer_record_count = 1
 
 
             response: bytes = DNSMessageEncoder.encode_message(message)
