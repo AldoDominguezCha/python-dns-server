@@ -154,10 +154,10 @@ class DNSMessageParser(object):
         print('I reached the end')
 
         # TODO: Remove
-        # print(f'In parser, parsed question count: {self.message.header.question_count}')
-        # print(f'In parser, parsed answer record count: {self.message.header.answer_record_count}')
-        # print(f'In parser, parsed authority record count: {self.message.header.authority_record_count}')
-        # print(f'In parser, parsed authority record count: {self.message.header.additional_record_count}')
+        print(f'In parser, parsed question count: {self.message.header.question_count}')
+        print(f'In parser, parsed answer record count: {self.message.header.answer_record_count}')
+        print(f'In parser, parsed authority record count: {self.message.header.authority_record_count}')
+        print(f'In parser, parsed authority record count: {self.message.header.additional_record_count}')
 
 
 class DNSMessage:
