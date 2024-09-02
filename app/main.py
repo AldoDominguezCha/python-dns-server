@@ -90,6 +90,7 @@ class DNSMessageParser(object):
         self.__message = DNSMessage()
 
         self.parse_header()
+        self.parse_questions(self.message.header)
     
     @property
     def message(self):
@@ -137,8 +138,6 @@ class DNSMessageParser(object):
         self.message.header.reserved = reserved
         self.message.header.response_code = response_code
 
-        print('Hey there')
-
         self.message.header.question_count = int.from_bytes(header[bytes_sequence_position : bytes_sequence_position + HEADER_QUESTION_COUNT_LENGTH_IN_BYTES])
         bytes_sequence_position += HEADER_QUESTION_COUNT_LENGTH_IN_BYTES
 
@@ -151,13 +150,29 @@ class DNSMessageParser(object):
 
         self.message.header.additional_record_count = int.from_bytes(header[bytes_sequence_position : bytes_sequence_position + HEADER_ADDITIONAL_COUNT_LENGTH_IN_BYTES])
 
-        print('I reached the end')
+    def parse_questions(self, question_count: int):
+        pointer = HEADER_LENGTH_IN_BYTES
 
-        # TODO: Remove
-        print(f'In parser, parsed question count: {self.message.header.question_count}')
-        print(f'In parser, parsed answer record count: {self.message.header.answer_record_count}')
-        print(f'In parser, parsed authority record count: {self.message.header.authority_record_count}')
-        print(f'In parser, parsed authority record count: {self.message.header.additional_record_count}')
+        domain_name_slices = []
+        while self.message.header.question_count > 0:
+            # We are assuming that each domain name has only two labels (this is most likely an erroneous generalization)
+            for i in range(2):
+                # Size of the following label in bytes
+                label_size = int.from_bytes(self.__raw_message[pointer : 1])
+                pointer += 1
+                label = self.__raw_message[pointer : label_size].decode('UTF-8')
+                pointer += label_size
+                domain_name_slices.append(label)
+
+            domain_name = '.'.join(domain_name_slices)
+            record_type = int.from_bytes(self.__raw_message[pointer : 2])
+            pointer += 2
+            question_class = int.from_bytes(self.__raw_message[pointer : 2])
+            pointer += 2
+            
+            print('Domain name found: ' + domain_name)
+            self.message.header.question_count -= 1
+            self.message.add_message_question(DNSQuestion(domain_name, record_type, question_class))
 
 
 class DNSMessage:
@@ -236,8 +251,6 @@ def main():
             # TODO: Create a writer class for this
             parser = DNSMessageParser(buf)
             message = parser.message
-
-            print(f'ID obtained: {message.header.packet_id}')
 
             # Set up the response message properties
             message.header.query_or_response_indicator = 1
