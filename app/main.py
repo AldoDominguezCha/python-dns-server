@@ -168,7 +168,7 @@ class DNSMessage:
         return self.__header
 
     @property
-    def question(self):
+    def questions(self):
         return self.__questions
 
     @property
