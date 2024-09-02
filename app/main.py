@@ -107,6 +107,7 @@ class DNSMessageParser(object):
         bytes_sequence_position += 1
 
         # From the byte to bits, removing the '0b' preffix
+        print(f'Next composite byte: {next_composite_byte}')
         next_composite_bits = bin(int.from_bytes(next_composite_byte)).removeprefix('0b')
         print(f'Next composite bits obtained: {next_composite_bits}')
         query_response = int(next_composite_bits[0])
@@ -127,6 +128,7 @@ class DNSMessageParser(object):
         bytes_sequence_position += 1
 
         # From the byte to bits, removing the '0b' preffix
+        print(f'Next composite byte: {next_composite_byte}')
         next_composite_bits = bin(int.from_bytes(next_composite_byte)).removeprefix('0b')
         print(f'Next composite bits obtained: {next_composite_bits}')
         recursion_available = int(next_composite_bits[0])
