@@ -160,12 +160,12 @@ class DNSMessageParser(object):
                 current_label_byte = self.__raw_message[pointer : pointer + 1]
                 pointer += 1
 
+                # This null byte as the label length indicates that the current label sequence ends
                 if current_label_byte == b'\x00':
                     break
 
                 label_size = int.from_bytes(current_label_byte)
                 label = self.__raw_message[pointer : pointer + label_size].decode('UTF-8')
-                print('Found label: ' + label)
                 pointer += label_size
                 domain_name_slices.append(label)
 
@@ -176,7 +176,6 @@ class DNSMessageParser(object):
             pointer += 2
             question_count -= 1
             
-            print('Domain name found: ' + domain_name)
             self.message.questions.append(DNSQuestion(domain_name, record_type, question_class))
 
 
@@ -265,7 +264,9 @@ def main():
             message.header.reserved = 0
             message.header.response_code = 0 if not message.header.operation_code else 4
 
-            message.add_message_answer(DNSRecord(DNSRecordPreamble('codecrafters.io', 1, 1, 60, 4), '8.8.8.8'))
+            # Mimic every queried domain name in the request providing a mock IP to it
+            for question in message.questions:
+                message.add_message_answer(DNSRecord(DNSRecordPreamble(question.domain_name, 1, 1, 60, 4), '8.8.8.8'))
 
             response: bytes = DNSMessageEncoder.encode_message(message)
     
