@@ -155,13 +155,12 @@ class DNSMessageParser(object):
 
         question_count = self.message.header.question_count
         while question_count > 0:
-            domain_name_slices = []
-            # We are assuming that each domain name has only two labels (this is most likely an erroneous generalization)
-            for i in range(2):
-                # Size of the following label in bytes
-                label_size = int.from_bytes(self.__raw_message[pointer : 1])
+            domain_name_slices, current_label_byte = [], None
+            while current_label_byte != b'\x00':
+                current_label_byte = self.__raw_message[pointer : pointer + 1]
                 pointer += 1
                 label = self.__raw_message[pointer : label_size].decode('UTF-8')
+                print('Found label: ' + label)
                 pointer += label_size
                 domain_name_slices.append(label)
 
