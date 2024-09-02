@@ -1,6 +1,14 @@
 from __future__ import annotations
 import socket
 
+# Constants section TODO: Move to its own module
+HEADER_LENGTH_IN_BYTES = 12
+HEADER_PACKET_ID_LENGTH_IN_BYTES = 2
+HEADER_QUESTION_COUNT_LENGTH_IN_BYTES = 2
+HEADER_ANSWER_COUNT_LENGTH_IN_BYTES = 2
+HEADER_AUTHORITY_COUNT_LENGTH_IN_BYTES = 2
+HEADER_ADDITIONAL_COUNT_LENGTH_IN_BYTES = 2
+
 # Manipulate a message, to set the data into it so we can send it as a byte sequence at the end
 class DNSMessageEncoder(object):
     @staticmethod
@@ -82,39 +90,94 @@ class DNSMessageEncoder(object):
 class DNSMessageParser(object):
     def __init__(self, raw_dns_message: bytes):
         self.__raw_message = raw_dns_message
-        # self.message = DNSMessage()
+        self.message = DNSMessage()
 
-    def parse_message_id(self):
-        header_bytes = self.__raw_message[0:16]
+        self.parse_header()
 
-        # TODO: This is now working, let us parse the entire header of the message and add it to a resulting
-        # message object
-        # TODO: Define the byte ranges as constants
-        packet_id = int.from_bytes(header_bytes[0:2])
-        print(f'Found ID in parsed message: {packet_id}')
+    def parse_header(self):
+        header: bytes = self.__raw_message[0:HEADER_LENGTH_IN_BYTES]
+        bytes_sequence_position = 0
 
-        return packet_id
+        # Parse all the header fields/attributes
+        packet_id = int.from_bytes(header[bytes_sequence_position:HEADER_PACKET_ID_LENGTH_IN_BYTES])
+        bytes_sequence_position += HEADER_PACKET_ID_LENGTH_IN_BYTES
 
+        # Take the next byte which is composed by multiple header fields
+        next_composite_byte = header[bytes_sequence_position:bytes_sequence_position + 1]
+        bytes_sequence_position += 1
+
+        # From the byte to bits, removing the '0b' preffix
+        next_composite_bits = bin(int.from_bytes(next_composite_byte)).removepreffix('0b')
+        query_response = int(next_composite_bits[0])
+        operation_code = int(next_composite_bits[1:5], base=2)
+        authoritative_answer = int(next_composite_bits[5])
+        truncated_message = int(next_composite_bits[6])
+        recursion_desired = int(next_composite_bits[7])
+
+        self.message.header.packet_id = packet_id
+        self.message.header.query_or_response_indicator = query_response
+        self.message.header.operation_code = operation_code
+        self.message.header.authoritative_answer = authoritative_answer
+        self.message.header.truncation = truncated_message
+        self.message.header.recursion_desired = recursion_desired
+
+        # Take the next byte which is composed by multiple header fields
+        next_composite_byte = header[bytes_sequence_position:bytes_sequence_position + 1]
+        bytes_sequence_position += 1
+
+        # From the byte to bits, removing the '0b' preffix
+        next_composite_bits = bin(int.from_bytes(next_composite_byte)).removepreffix('0b')
+        recursion_available = int(next_composite_bits[0])
+        reserved = int(next_composite_bits[1:4], base=2)
+        response_code = int(next_composite_bits[4:8], base=2)
+
+        self.message.header.recursion_available = recursion_available
+        self.message.header.reserved = reserved
+        self.message.header.response_code = response_code
+
+        self.message.header.question_count = int.from_bytes(header[bytes_sequence_position : bytes_sequence_position + HEADER_QUESTION_COUNT_LENGTH_IN_BYTES])
+        bytes_sequence_position += HEADER_QUESTION_COUNT_LENGTH_IN_BYTES
+
+
+        self.message.header.answer_record_count = int.from_bytes(header[bytes_sequence_position : bytes_sequence_position + HEADER_ANSWER_COUNT_LENGTH_IN_BYTES])
+        bytes_sequence_position += HEADER_ANSWER_COUNT_LENGTH_IN_BYTES
+
+        self.message.header.authority_record_count = int.from_bytes(header[bytes_sequence_position : bytes_sequence_position + HEADER_AUTHORITY_COUNT_LENGTH_IN_BYTES])
+        bytes_sequence_position += HEADER_AUTHORITY_COUNT_LENGTH_IN_BYTES
+
+        self.message.header.additional_record_count = int.from_bytes(header[bytes_sequence_position : bytes_sequence_position + HEADER_ADDITIONAL_COUNT_LENGTH_IN_BYTES])
+
+        print(f'In parser, parsed question count: {self.message.header.question_count}')
+        print(f'In parser, parsed answer record count: {self.message.header.answer_record_count}')
+        print(f'In parser, parsed authority record count: {self.message.header.authority_record_count}')
+        print(f'In parser, parsed authority record count: {self.message.header.additional_record_count}')
 
 
 class DNSMessage:
     def __init__(self, packet_id: int = 0, query_response: int = 0):
         self.__header: DNSMessageHeader = DNSMessageHeader(packet_id, query_response)
-        # TODO: Make them private with a getter
-        self.questions = []
-        self.answers = []
+        self__.questions = []
+        self__.answers = []
 
     @property
     def header(self):
         return self.__header
+
+    @property
+    def question(self):
+        return self.__questions
+
+    @property
+    def answers(self):
+        return self.__answers
     
     def add_message_question(self, dns_question):
         self.questions.append(dns_question)
-        self.__header.increment_question_count()
+        self.__header.question_count += 1
 
     def add_message_answer(self, dns_record):
         self.answers.append(dns_record)
-        self.__header.increment_answer_count()
+        self.__header.answer_record_count += 1
         
 
 class DNSMessageHeader:
@@ -128,32 +191,10 @@ class DNSMessageHeader:
         self.recursion_available = 0
         self.reserved = 0
         self.response_code = 0
-        self.__question_count = 0
-        self.__answer_record_count = 0
-        self.__authority_record_count = 0
-        self.__additional_record_count = 0
-
-    @property
-    def question_count(self):
-        return self.__question_count
-
-    @property
-    def answer_record_count(self):
-        return self.__answer_record_count
-
-    @property
-    def authority_record_count(self):
-        return self.__authority_record_count
-
-    @property
-    def additional_record_count(self):
-        return self.__additional_record_count
-    
-    def increment_question_count(self):
-        self.__question_count += 1
-
-    def increment_answer_count(self):
-        self.__answer_record_count += 1
+        self.question_count = 0
+        self.answer_record_count = 0
+        self.authority_record_count = 0
+        self.additional_record_count = 0
         
 class DNSQuestion:
     def __init__(self, domain_name, record_type, question_class):
@@ -187,7 +228,7 @@ def main():
             # Build DNS response message
             # TODO: Create a writer class for this
             parser = DNSMessageParser(buf)
-            packet_id = parser.parse_message_id()
+            packet_id = parser.message.header.packet_id
 
             dns_response_message = DNSMessage(packet_id, 1)
             dns_response_message.add_message_question(DNSQuestion('codecrafters.io', 1, 1))
