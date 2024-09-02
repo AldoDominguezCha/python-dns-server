@@ -108,6 +108,7 @@ class DNSMessageParser(object):
 
         # From the byte to bits, removing the '0b' preffix
         next_composite_bits = bin(int.from_bytes(next_composite_byte)).removeprefix('0b')
+        print(f'Next composite bits obtained: {next_composite_bits}')
         query_response = int(next_composite_bits[0])
         operation_code = int(next_composite_bits[1:5], base=2)
         authoritative_answer = int(next_composite_bits[5])
@@ -127,6 +128,7 @@ class DNSMessageParser(object):
 
         # From the byte to bits, removing the '0b' preffix
         next_composite_bits = bin(int.from_bytes(next_composite_byte)).removeprefix('0b')
+        print(f'Next composite bits obtained: {next_composite_bits}')
         recursion_available = int(next_composite_bits[0])
         reserved = int(next_composite_bits[1:4], base=2)
         response_code = int(next_composite_bits[4:8], base=2)
