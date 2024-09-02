@@ -46,8 +46,6 @@ class DNSMessageEncoder(object):
         header_bytes += DNSMessageEncoder.__encode(header.authority_record_count, 2)
         header_bytes += DNSMessageEncoder.__encode(header.additional_record_count, 2)
 
-        print(f'Message header bytes encoded: {header_bytes}')
-
         # Sequence of bytes can be appended with one another, that's just what we did, grouping together the different header properties that conform a single byte
         # b'\x04' + b'\xd2' = b'\x04\xd2'
         return header_bytes
@@ -72,7 +70,6 @@ class DNSMessageEncoder(object):
     @staticmethod
     def get_record_bytes(record: DNSRecord):
         encoded_ip = b''.join(DNSMessageEncoder.__encode(int(ip_byte), 1) for ip_byte in record.ip.split('.'))
-        print(f'Encoded IP obtained in DNS record: {encoded_ip}')
 
         return DNSMessageEncoder.get_preamble_bytes(record.preamble) + encoded_ip
     
@@ -140,6 +137,8 @@ class DNSMessageParser(object):
         self.message.header.reserved = reserved
         self.message.header.response_code = response_code
 
+        print('Hey there')
+
         self.message.header.question_count = int.from_bytes(header[bytes_sequence_position : bytes_sequence_position + HEADER_QUESTION_COUNT_LENGTH_IN_BYTES])
         bytes_sequence_position += HEADER_QUESTION_COUNT_LENGTH_IN_BYTES
 
@@ -151,6 +150,8 @@ class DNSMessageParser(object):
         bytes_sequence_position += HEADER_AUTHORITY_COUNT_LENGTH_IN_BYTES
 
         self.message.header.additional_record_count = int.from_bytes(header[bytes_sequence_position : bytes_sequence_position + HEADER_ADDITIONAL_COUNT_LENGTH_IN_BYTES])
+
+        print('I reached the end')
 
         # TODO: Remove
         # print(f'In parser, parsed question count: {self.message.header.question_count}')
