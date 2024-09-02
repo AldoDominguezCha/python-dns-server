@@ -236,6 +236,8 @@ def main():
             parser = DNSMessageParser(buf)
             message = parser.message
 
+            print(f'ID obtained: {message.header.packet_id}')
+
             # Set up the response message properties
             message.header.query_or_response_indicator = 1
             message.header.authoritative_answer = 0
