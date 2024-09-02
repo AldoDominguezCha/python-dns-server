@@ -90,9 +90,14 @@ class DNSMessageEncoder(object):
 class DNSMessageParser(object):
     def __init__(self, raw_dns_message: bytes):
         self.__raw_message = raw_dns_message
-        self.message = DNSMessage()
+        self.__message = DNSMessage()
 
         self.parse_header()
+    
+    @property
+    def message(self):
+        return self.__message
+
 
     def parse_header(self):
         header: bytes = self.__raw_message[0:HEADER_LENGTH_IN_BYTES]
@@ -107,9 +112,7 @@ class DNSMessageParser(object):
         bytes_sequence_position += 1
 
         # From the byte to bits, removing the '0b' preffix
-        print(f'Next composite byte: {next_composite_byte}')
         next_composite_bits = format(int.from_bytes(next_composite_byte), '08b')
-        print(f'Next composite bits obtained: {next_composite_bits}')
         query_response = int(next_composite_bits[0])
         operation_code = int(next_composite_bits[1:5], base=2)
         authoritative_answer = int(next_composite_bits[5])
@@ -128,9 +131,7 @@ class DNSMessageParser(object):
         bytes_sequence_position += 1
 
         # From the byte to bits, removing the '0b' preffix
-        print(f'Next composite byte: {next_composite_byte}')
         next_composite_bits = format(int.from_bytes(next_composite_byte), '08b')
-        print(f'Next composite bits obtained: {next_composite_bits}')
         recursion_available = int(next_composite_bits[0])
         reserved = int(next_composite_bits[1:4], base=2)
         response_code = int(next_composite_bits[4:8], base=2)
@@ -151,10 +152,11 @@ class DNSMessageParser(object):
 
         self.message.header.additional_record_count = int.from_bytes(header[bytes_sequence_position : bytes_sequence_position + HEADER_ADDITIONAL_COUNT_LENGTH_IN_BYTES])
 
-        print(f'In parser, parsed question count: {self.message.header.question_count}')
-        print(f'In parser, parsed answer record count: {self.message.header.answer_record_count}')
-        print(f'In parser, parsed authority record count: {self.message.header.authority_record_count}')
-        print(f'In parser, parsed authority record count: {self.message.header.additional_record_count}')
+        # TODO: Remove
+        # print(f'In parser, parsed question count: {self.message.header.question_count}')
+        # print(f'In parser, parsed answer record count: {self.message.header.answer_record_count}')
+        # print(f'In parser, parsed authority record count: {self.message.header.authority_record_count}')
+        # print(f'In parser, parsed authority record count: {self.message.header.additional_record_count}')
 
 
 class DNSMessage:
@@ -232,14 +234,20 @@ def main():
             # Build DNS response message
             # TODO: Create a writer class for this
             parser = DNSMessageParser(buf)
-            packet_id = parser.message.header.packet_id
+            message = parser.message
 
-            dns_response_message = DNSMessage(packet_id, 1)
-            dns_response_message.add_message_question(DNSQuestion('codecrafters.io', 1, 1))
-            dns_response_message.add_message_answer(DNSRecord(DNSRecordPreamble('codecrafters.io', 1, 1, 60, 4), '8.8.8.8'))
+            # Set up the response message properties
+            message.header.query_or_response_indicator = 1
+            message.header.authoritative_answer = 0
+            message.header.truncation = 0
+            message.header.recursion_available = 0
+            message.header.reserved = 0
+            message.header.response_code = 0 if not message.header.operation_code else 4
+            message.add_message_question(DNSQuestion('codecrafters.io', 1, 1))
+            message.add_message_answer(DNSRecord(DNSRecordPreamble('codecrafters.io', 1, 1, 60, 4), '8.8.8.8'))
 
 
-            response: bytes = DNSMessageEncoder.encode_message(dns_response_message)
+            response: bytes = DNSMessageEncoder.encode_message(message)
     
             udp_socket.sendto(response, source)
         except Exception as e:
