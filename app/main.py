@@ -156,8 +156,8 @@ class DNSMessageParser(object):
 class DNSMessage:
     def __init__(self, packet_id: int = 0, query_response: int = 0):
         self.__header: DNSMessageHeader = DNSMessageHeader(packet_id, query_response)
-        self__.questions = []
-        self__.answers = []
+        self.__questions = []
+        self.__answers = []
 
     @property
     def header(self):
