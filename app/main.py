@@ -162,7 +162,7 @@ class DNSMessageParser(object):
                 if current_label_byte == b'\x00':
                     break
 
-                label_size = int.from_bytes()
+                label_size = int.from_bytes(current_label_byte)
                 pointer += 1
                 label = self.__raw_message[pointer : label_size].decode('UTF-8')
                 print('Found label: ' + label)
