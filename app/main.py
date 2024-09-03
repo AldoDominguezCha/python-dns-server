@@ -90,7 +90,7 @@ class DNSMessageParser(object):
         self.__message = DNSMessage()
 
         self.parse_header()
-        self.parse_questions(self.message.header)
+        self.parse_questions(self.message.header.question_count)
     
     @property
     def message(self):
@@ -150,33 +150,43 @@ class DNSMessageParser(object):
 
         self.message.header.additional_record_count = int.from_bytes(header[bytes_sequence_position : bytes_sequence_position + HEADER_ADDITIONAL_COUNT_LENGTH_IN_BYTES])
 
+    def parse_question(self, starting_point_in_bytes: int) -> DNSQuestion:
+        pointer, domain_name_slices = starting_point_in_bytes, []
+        current_label_byte = self.__raw_message[pointer : pointer + 1]
+        pointer += 1
+
+        # This null byte as the label length indicates that the current label sequence ends
+        while current_label_byte != b'\x00':
+            label_size = int.from_bytes(current_label_byte)
+            label = self.__raw_message[pointer : pointer + label_size].decode('UTF-8')
+            pointer += label_size
+            domain_name_slices.append(label)
+
+            # Move to the next label in the label sequence
+            current_label_byte = self.__raw_message[pointer : pointer + 1]
+            pointer += 1
+
+        domain_name = '.'.join(domain_name_slices)
+        record_type = int.from_bytes(self.__raw_message[pointer : pointer + 2])
+        pointer += 2
+        question_class = int.from_bytes(self.__raw_message[pointer : pointer + 2])
+        pointer += 2
+
+        return (DNSQuestion(domain_name, record_type, question_class), pointer)
+
+
+        
+        # TODO: We'll use later in the compression scheme
+        # label_length_as_bits = format(int.from_bytes(current_label_byte), '08b')
+
+    
     def parse_questions(self, question_count: int):
         pointer = HEADER_LENGTH_IN_BYTES
 
-        question_count = self.message.header.question_count
         while question_count > 0:
-            domain_name_slices, current_label_byte = [], None
-            while True:
-                current_label_byte = self.__raw_message[pointer : pointer + 1]
-                pointer += 1
-
-                # This null byte as the label length indicates that the current label sequence ends
-                if current_label_byte == b'\x00':
-                    break
-
-                label_size = int.from_bytes(current_label_byte)
-                label = self.__raw_message[pointer : pointer + label_size].decode('UTF-8')
-                pointer += label_size
-                domain_name_slices.append(label)
-
-            domain_name = '.'.join(domain_name_slices)
-            record_type = int.from_bytes(self.__raw_message[pointer : pointer + 2])
-            pointer += 2
-            question_class = int.from_bytes(self.__raw_message[pointer : pointer + 2])
-            pointer += 2
+            question, pointer = self.parse_question(pointer)
+            self.message.questions.append(question)
             question_count -= 1
-            
-            self.message.questions.append(DNSQuestion(domain_name, record_type, question_class))
 
 
 class DNSMessage:
@@ -264,7 +274,7 @@ def main():
             message.header.reserved = 0
             message.header.response_code = 0 if not message.header.operation_code else 4
 
-            # Mimic every queried domain name in the request providing a mock IP to it
+            # "Reply" to each question issued by the client: Mimic every queried domain name in the request providing a mock IP to it
             for question in message.questions:
                 message.add_message_answer(DNSRecord(DNSRecordPreamble(question.domain_name, 1, 1, 60, 4), '8.8.8.8'))
 
