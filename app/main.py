@@ -153,7 +153,26 @@ class DNSMessageParser(object):
     def parse_question(self, starting_point_in_bytes: int) -> DNSQuestion:
         pointer, domain_name_slices = starting_point_in_bytes, []
         current_label_byte = self.__raw_message[pointer : pointer + 1]
-        pointer += 1
+
+        label_length_as_bits = format(int.from_bytes(current_label_byte), '08b')
+        
+        # This means this is not a regular label sequence, but a pointer to a label that has appeared before in the message (instead of reapeating the domain name
+        # we point to a previous occurrence)
+        if label_length_as_bits[0:2] == '11':
+            offset  = format(int.from_bytes(self.__raw_message[pointer : pointer + 2]), '016b')
+            # We remove the MSB of the two bytes that conform the pointer, these are just flags, not actually part of the pointer
+            offset = '00' + offset[2:]
+            print('Obtained offset pointer parsing the question: ' + offset)
+            question, = self.parse_question(int(offset, base=2))
+            pointer_after_offset = pointer + 2
+
+            return (question, pointer_after_offset)
+
+        # This is a regular label sequence SO FAR
+        else:
+            pointer += 1
+
+        
 
         # This null byte as the label length indicates that the current label sequence ends
         while current_label_byte != b'\x00':
@@ -164,7 +183,25 @@ class DNSMessageParser(object):
 
             # Move to the next label in the label sequence
             current_label_byte = self.__raw_message[pointer : pointer + 1]
-            pointer += 1
+            label_length_as_bits = format(int.from_bytes(current_label_byte), '08b')
+        
+            # This means this is not a regular label sequence anymore, but a pointer to a label that has appeared before in the message (instead of reapeating the domain name
+            # we point to a previous occurrence)
+            if label_length_as_bits[0:2] == '11':
+                offset  = format(int.from_bytes(self.__raw_message[pointer : pointer + 2]), '016b')
+                # We remove the MSB of the two bytes that conform the pointer, these are just flags, not actually part of the pointer
+                offset = '00' + offset[2:]
+                print('Obtained offset pointer parsing the question: ' + offset)
+                question, = self.parse_question(int(offset, base=2))
+                pointer_after_offset = pointer + 2
+
+                question.domain_name = '.'.join(domain_name_slices) + question.domain_name
+
+                return (question, pointer_after_offset)
+
+            # This is a regular label sequence SO FAR
+            else:
+                pointer += 1
 
         domain_name = '.'.join(domain_name_slices)
         record_type = int.from_bytes(self.__raw_message[pointer : pointer + 2])
@@ -172,14 +209,7 @@ class DNSMessageParser(object):
         question_class = int.from_bytes(self.__raw_message[pointer : pointer + 2])
         pointer += 2
 
-        print('Domain name in parsed question: ' + domain_name)
-
         return (DNSQuestion(domain_name, record_type, question_class), pointer)
-
-
-        
-        # TODO: We'll use later in the compression scheme
-        # label_length_as_bits = format(int.from_bytes(current_label_byte), '08b')
 
     
     def parse_questions(self, question_count: int):
