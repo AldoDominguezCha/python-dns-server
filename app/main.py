@@ -172,6 +172,8 @@ class DNSMessageParser(object):
         question_class = int.from_bytes(self.__raw_message[pointer : pointer + 2])
         pointer += 2
 
+        print('Domain name in parsed question: ' + domain_name)
+
         return (DNSQuestion(domain_name, record_type, question_class), pointer)
 
 
