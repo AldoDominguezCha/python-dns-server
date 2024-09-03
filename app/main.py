@@ -162,7 +162,6 @@ class DNSMessageParser(object):
             offset  = format(int.from_bytes(self.__raw_message[pointer : pointer + 2]), '016b')
             # We remove the MSB of the two bytes that conform the pointer, these are just flags, not actually part of the pointer
             offset = '00' + offset[2:]
-            print('Obtained offset pointer parsing the question: ' + offset)
             question, = self.parse_question(int(offset, base=2))
             pointer_after_offset = pointer + 2
 
@@ -191,7 +190,6 @@ class DNSMessageParser(object):
                 offset  = format(int.from_bytes(self.__raw_message[pointer : pointer + 2]), '016b')
                 # We remove the MSB of the two bytes that conform the pointer, these are just flags, not actually part of the pointer
                 offset = '00' + offset[2:]
-                print('Obtained offset pointer parsing the question: ' + offset)
                 question, p = self.parse_question(int(offset, base=2))
                 pointer_after_offset = pointer + 2
 
