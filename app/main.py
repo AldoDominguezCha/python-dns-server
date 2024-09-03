@@ -217,6 +217,7 @@ class DNSMessageParser(object):
 
         while question_count > 0:
             question, pointer = self.parse_question(pointer)
+            print('Parsed question domain name: ' + question.domain_name)
             self.message.questions.append(question)
             question_count -= 1
 
