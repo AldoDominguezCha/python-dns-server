@@ -382,6 +382,7 @@ def handle_dns_query(server_udp_socket, buffer: bytes, source, resolver):
             forward_query_message = DNSMessage(original_message.header.packet_id)
             forward_query_message.add_message_question(question)
 
+            print(f'Question count in forward message: {forward_query_message.header.question_count}')
             server_udp_socket.sendto(DNSMessageEncoder.encode_message(forward_query_message), resolver_address)
             raw_forward_response, _ = server_udp_socket.recvfrom(512)
 
