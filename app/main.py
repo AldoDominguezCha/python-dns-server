@@ -150,7 +150,7 @@ class DNSMessageParser(object):
 
         self.message.header.additional_record_count = int.from_bytes(header[bytes_sequence_position : bytes_sequence_position + HEADER_ADDITIONAL_COUNT_LENGTH_IN_BYTES])
 
-    def parse_question(self):
+    def parse_question(self, starting_point_in_bytes: int):
         pointer, domain_name_slices = starting_point_in_bytes, []
         current_label_byte = self.__raw_message[pointer : pointer + 1]
 
