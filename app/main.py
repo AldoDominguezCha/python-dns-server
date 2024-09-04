@@ -1,5 +1,6 @@
 from __future__ import annotations
 import socket
+from concurrent.futures import ThreadPoolExecutor
 
 # Constants section TODO: Move to its own module
 HEADER_LENGTH_IN_BYTES = 12
@@ -274,37 +275,39 @@ class DNSRecordPreamble:
         self.TTL = time_to_live
         self.data_length = data_length
 
+def handle_dns_query(server_udp_socket, buffer: bytes, source):
+    parser = DNSMessageParser(buffer)
+    message = parser.message
+
+    # Set up the response message properties
+    message.header.query_or_response_indicator = 1
+    message.header.authoritative_answer = 0
+    message.header.truncation = 0
+    message.header.recursion_available = 0
+    message.header.reserved = 0
+    message.header.response_code = 0 if not message.header.operation_code else 4
+
+    # "Reply" to each question issued by the client: Mimic every queried domain name in the request providing a mock IP to it
+    for question in message.questions:
+        message.add_message_answer(DNSRecord(DNSRecordPreamble(question.domain_name, 1, 1, 60, 4), '8.8.8.8'))
+
+    response: bytes = DNSMessageEncoder.encode_message(message)
+
+    server_udp_socket.sendto(response, source)
+
 def main():
     udp_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     udp_socket.bind(("127.0.0.1", 2053))
     
-    # TODO: Replace this with a ThreadPoolExecutor
-    while True:
-        try:
-            buf, source = udp_socket.recvfrom(512)
-            # Build DNS response message
-            # TODO: Create a writer class for this
-            parser = DNSMessageParser(buf)
-            message = parser.message
-
-            # Set up the response message properties
-            message.header.query_or_response_indicator = 1
-            message.header.authoritative_answer = 0
-            message.header.truncation = 0
-            message.header.recursion_available = 0
-            message.header.reserved = 0
-            message.header.response_code = 0 if not message.header.operation_code else 4
-
-            # "Reply" to each question issued by the client: Mimic every queried domain name in the request providing a mock IP to it
-            for question in message.questions:
-                message.add_message_answer(DNSRecord(DNSRecordPreamble(question.domain_name, 1, 1, 60, 4), '8.8.8.8'))
-
-            response: bytes = DNSMessageEncoder.encode_message(message)
-    
-            udp_socket.sendto(response, source)
-        except Exception as e:
-            print(f"Error receiving data: {e}")
-            break
+    with ThreadPoolExecutor(max_workers=None) as executor:
+        while True:
+            try:
+                buf, source = udp_socket.recvfrom(512)
+                executor.submit(handle_dns_query, udp_socket, buf, source)
+                
+            except Exception as e:
+                print(f"Error receiving data: {e}")
+                break
 
 
 if __name__ == "__main__":
