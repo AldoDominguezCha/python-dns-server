@@ -363,6 +363,7 @@ def handle_dns_query(server_udp_socket, buffer: bytes, source, resolver):
     try:
         resolver_ip, resolver_port = resolver.split(':', 1)
         resolver_address = (resolver_ip, int(resolver_port))
+        resolver_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         
         parser = DNSMessageParser(buffer)
         original_message = parser.message
@@ -384,8 +385,8 @@ def handle_dns_query(server_udp_socket, buffer: bytes, source, resolver):
             forward_query_message.add_message_question(question)
 
             print(f'Question count in forward message: {forward_query_message.header.question_count}')
-            server_udp_socket.sendto(DNSMessageEncoder.encode_message(forward_query_message), resolver_address)
-            raw_forward_response, _ = server_udp_socket.recvfrom(512)
+            resolver_socket.sendto(DNSMessageEncoder.encode_message(forward_query_message), resolver_address)
+            raw_forward_response, _ = resolver_socket.recvfrom(512)
 
             forward_response_parser = DNSMessageParser(raw_forward_response)
             print(f'Length of answers: {len(forward_response_parser.message.answers)}')
