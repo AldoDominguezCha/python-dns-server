@@ -375,7 +375,9 @@ def handle_dns_query(server_udp_socket, buffer: bytes, source, resolver):
         original_message.header.response_code = 0 if not original_message.header.operation_code else 4
 
         # The forward server only allos a single question in the query per UDP message
+        print(f'Questions in original message: {original_message.questions}. Length: {len(original_message.questions)}')
         for question in original_message.questions:
+            print(f'Question in original message, domain name: {question.domain_name}.')
             forward_query_message = DNSMessage(original_message.header.packet_id)
             forward_query_message.add_message_question(question)
 
