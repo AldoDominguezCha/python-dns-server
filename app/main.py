@@ -388,7 +388,7 @@ def handle_dns_query(server_udp_socket, buffer: bytes, source, resolver):
             print(f'In forward response message, IP address in answer record: {forward_response_parser.message.answers[0].ip}')
 
 
-        original_message.add_message_answer(DNSRecord(DNSRecordPreamble(message.questions[0].domain_name, 1, 1, 60, 4), '8.8.8.8'))
+        original_message.add_message_answer(DNSRecord(DNSRecordPreamble(original_message.questions[0].domain_name, 1, 1, 60, 4), '8.8.8.8'))
 
         response: bytes = DNSMessageEncoder.encode_message(original_message)
 
