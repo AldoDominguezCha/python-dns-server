@@ -237,6 +237,14 @@ class DNSMessage:
     def add_message_answer(self, dns_record):
         self.answers.append(dns_record)
         self.__header.answer_record_count += 1
+
+    def reset_message_questions(self):
+        self.__questions = []
+        self.__header.question_count = 0
+
+    def reset_message_answers(self):
+        self.__answers = []
+        self.__header.answer_record_count = 0
         
 
 class DNSMessageHeader:
@@ -277,8 +285,6 @@ class DNSRecordPreamble:
         self.data_length = data_length
 
 def handle_dns_query(server_udp_socket, buffer: bytes, source, resolver):
-    print(f'Handling DNS query, source: {source}')
-
     try:
         resolver_ip, resolver_port = resolver.split(':', 1)
         resolver_address = (resolver_ip, int(resolver_port))
@@ -297,8 +303,26 @@ def handle_dns_query(server_udp_socket, buffer: bytes, source, resolver):
         message.header.response_code = 0 if not message.header.operation_code else 4
 
         # "Reply" to each question issued by the client: Mimic every queried domain name in the request providing a mock IP to it
-        for question in message.questions:
-            message.add_message_answer(DNSRecord(DNSRecordPreamble(question.domain_name, 1, 1, 60, 4), '8.8.8.8'))
+        # for question in message.questions:
+        #     message.add_message_answer(DNSRecord(DNSRecordPreamble(question.domain_name, 1, 1, 60, 4), '8.8.8.8'))
+        
+        # Testing: Forward only one question
+        message.header.query_or_response_indicator = 0
+        
+        questions = message.questions
+        if questions:
+            message.reset_message_questions()
+            message.add_message_question(questions[0])
+
+        # Forward query
+        server_udp_socket.sendto(DNSMessageEncoder.encode_message(message), resolver_address)
+        raw_forward_response, _ = udp_socket.recvfrom(512)
+
+        print(f'Raw response form forward server: {raw_forward_response}')
+
+
+        message.add_message_answer(DNSRecord(DNSRecordPreamble(message.questions[0].domain_name, 1, 1, 60, 4), '8.8.8.8'))
+            
 
         response: bytes = DNSMessageEncoder.encode_message(message)
 
