@@ -277,6 +277,8 @@ class DNSRecordPreamble:
         self.data_length = data_length
 
 def handle_dns_query(server_udp_socket, buffer: bytes, source, resolver):
+    print(f'Handling DNS query, source: {source}')
+
     try:
         resolver_ip, resolver_port = resolver.split(':', 1)
         resolver_address = (resolver_ip, int(resolver_port))
