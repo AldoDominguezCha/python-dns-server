@@ -279,7 +279,7 @@ class DNSRecordPreamble:
 def handle_dns_query(server_udp_socket, buffer: bytes, source, resolver):
     try:
         resolver_ip, resolver_port = resolver.split(':', 1)
-        resolver_address = (resolver_ip, resolver_port)
+        resolver_address = (resolver_ip, int(resolver_port))
 
         print(f'Resolver address found: {resolver_address}')
         
@@ -309,8 +309,6 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--resolver')
     args = parser.parse_args()
-
-    print('In main, parsed resolver argument: ' + args.resolver)
 
     udp_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     udp_socket.bind(("127.0.0.1", 2053))
