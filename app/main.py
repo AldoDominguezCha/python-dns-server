@@ -408,12 +408,9 @@ def main():
         while True:
             try:
                 buf, source = udp_socket.recvfrom(512)
-                # TODO: How to handle exceptions inside the ThreadPoolExecutor
-                executor.submit(handle_dns_query, udp_socket, buf, source, args.resolver)
-                
+                handle_dns_query(udp_socket, buf, source, args.resolver)
             except Exception as e:
-                print(f"Error receiving data: {e}")
-                break
+                print(f"Error handling DNS query: {e}")
 
 
 if __name__ == "__main__":
