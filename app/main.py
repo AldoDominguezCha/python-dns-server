@@ -281,8 +281,6 @@ class DNSMessageParser(object):
 
         while answer_count:
             answer, pointer = self.parse_answer_record(pointer)
-            print(f'In parsed answer record. Domain name: {answer.preamble.domain_name}')
-            print(f'In parsed answer record. IP: {answer.ip}')
             self.message.answers.append(answer)
             answer_count -= 1
 
@@ -364,43 +362,33 @@ def handle_dns_query(server_udp_socket, buffer: bytes, source, resolver):
     try:
         resolver_ip, resolver_port = resolver.split(':', 1)
         resolver_address = (resolver_ip, int(resolver_port))
-
-        print(f'Resolver address found: {resolver_address}')
         
         parser = DNSMessageParser(buffer)
-        message = parser.message
+        original_message = parser.message
 
         # Set up the response message properties
-        message.header.query_or_response_indicator = 1
-        message.header.authoritative_answer = 0
-        message.header.truncation = 0
-        message.header.recursion_available = 0
-        message.header.reserved = 0
-        message.header.response_code = 0 if not message.header.operation_code else 4
+        original_message.header.query_or_response_indicator = 1
+        original_message.header.authoritative_answer = 0
+        original_message.header.truncation = 0
+        original_message.header.recursion_available = 0
+        original_message.header.reserved = 0
+        original_message.header.response_code = 0 if not original_message.header.operation_code else 4
 
-        # "Reply" to each question issued by the client: Mimic every queried domain name in the request providing a mock IP to it
-        # for question in message.questions:
-        #     message.add_message_answer(DNSRecord(DNSRecordPreamble(question.domain_name, 1, 1, 60, 4), '8.8.8.8'))
-        
-        # Testing: Forward only one question
-        message.header.query_or_response_indicator = 0
-        
-        questions = message.questions
-        if questions:
-            message.reset_message_questions()
-            message.add_message_question(questions[0])
+        # The forward server only allos a single question in the query per UDP message
+        for question in original_message.questions:
+            forward_query_message = DNSMessage(original_message.header.packet_id)
+            forward_query_message.header.question_count = 1
 
-        # Forward query
-        server_udp_socket.sendto(DNSMessageEncoder.encode_message(message), resolver_address)
-        raw_forward_response, _ = server_udp_socket.recvfrom(512)
+            server_udp_socket.sendto(DNSMessageEncoder.encode_message(message), resolver_address)
+            raw_forward_response, _ = server_udp_socket.recvfrom(512)
 
-        new_parser = DNSMessageParser(raw_forward_response)
-
-        print(f'Raw response form forward server: {raw_forward_response}')
+            forward_response_parser = DNSMessageParser(raw_forward_response)
+            print(f'In forward response message, number of answer records: {forward_response_parser.message.header.answer_record_count}')
+            print(f'In forward response message, domain name in answer record: {forward_response_parser.message.answers[0].preamble.domain_name}')
+            print(f'In forward response message, IP address in answer record: {forward_response_parser.message.answers[0].ip}')
 
 
-        message.add_message_answer(DNSRecord(DNSRecordPreamble(message.questions[0].domain_name, 1, 1, 60, 4), '8.8.8.8'))
-            
+        original_message.add_message_answer(DNSRecord(DNSRecordPreamble(message.questions[0].domain_name, 1, 1, 60, 4), '8.8.8.8'))
 
         response: bytes = DNSMessageEncoder.encode_message(message)
 
