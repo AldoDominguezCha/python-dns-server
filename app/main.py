@@ -379,6 +379,7 @@ def handle_dns_query(server_udp_socket, buffer: bytes, source, resolver):
         original_message.header.response_code = 0 if not original_message.header.operation_code else 4
 
         # The forward server only allos a single question in the query per UDP message
+        print(f'Original message questions length: {len(original_message.questions)}')
         for question in original_message.questions:
             print('INSIDE FOR LOOP')
             forward_query_message = DNSMessage(original_message.header.packet_id)
@@ -389,13 +390,12 @@ def handle_dns_query(server_udp_socket, buffer: bytes, source, resolver):
             raw_forward_response, _ = resolver_socket.recvfrom(512)
 
             forward_response_parser = DNSMessageParser(raw_forward_response)
-            print(f'Length of answers: {len(forward_response_parser.message.answers)}')
-            print(f'Raw answer bytes from forward server: {forward_response_parser.raw_answer_bytes}')
+            # print(f'Length of answers: {len(forward_response_parser.message.answers)}')
+            # print(f'Raw answer bytes from forward server: {forward_response_parser.raw_answer_bytes}')
             if forward_response_parser.message.answers:
-                print(f'From forward server, maion name: {forward_response_parser.message.answers[0].preamble.domain_name}')
+                # print(f'From forward server, maion name: {forward_response_parser.message.answers[0].preamble.domain_name}')
                 original_message.add_message_answer(forward_response_parser.message.answers[0])
 
-        print(f'Right before sending, packet id: {original_message.header.packet_id}')
         response: bytes = DNSMessageEncoder.encode_message(original_message)
 
         server_udp_socket.sendto(response, source)
