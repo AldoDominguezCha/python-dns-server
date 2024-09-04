@@ -1,4 +1,5 @@
 from __future__ import annotations
+import argparse
 import socket
 from concurrent.futures import ThreadPoolExecutor
 
@@ -276,6 +277,8 @@ class DNSRecordPreamble:
         self.data_length = data_length
 
 def handle_dns_query(server_udp_socket, buffer: bytes, source):
+    print('In handle_dns_query, parsed resolver argument: ' + args.resolver)
+
     parser = DNSMessageParser(buffer)
     message = parser.message
 
@@ -296,6 +299,12 @@ def handle_dns_query(server_udp_socket, buffer: bytes, source):
     server_udp_socket.sendto(response, source)
 
 def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--resolver')
+    args = parser.parse_args()
+
+    print('In main, parsed resolver argument: ' + args.resolver)
+
     udp_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     udp_socket.bind(("127.0.0.1", 2053))
     
@@ -303,6 +312,7 @@ def main():
         while True:
             try:
                 buf, source = udp_socket.recvfrom(512)
+                # TODO: How to handle exceptions inside the ThreadPoolExecutor
                 executor.submit(handle_dns_query, udp_socket, buf, source)
                 
             except Exception as e:
