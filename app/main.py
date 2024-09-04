@@ -377,7 +377,7 @@ def handle_dns_query(server_udp_socket, buffer: bytes, source, resolver):
         # The forward server only allos a single question in the query per UDP message
         for i in range(len(original_message.questions)):
             forward_query_message = DNSMessage(i)
-            forward_query_message.add_message_question(question)
+            forward_query_message.add_message_question(original_message.questions[i])
 
             server_udp_socket.sendto(DNSMessageEncoder.encode_message(forward_query_message), resolver_address)
             raw_forward_response, _ = server_udp_socket.recvfrom(512)
