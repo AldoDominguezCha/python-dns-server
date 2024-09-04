@@ -93,6 +93,7 @@ class DNSMessageParser(object):
 
         self.parse_header()
         pointer = self.parse_questions(self.message.header.question_count)
+        self.raw_answer_bytes: bytes = self.__raw_message[pointer:]
         self.parse_answer_records(pointer, self.message.header.answer_record_count)
     
     @property
@@ -388,6 +389,7 @@ def handle_dns_query(server_udp_socket, buffer: bytes, source, resolver):
 
             forward_response_parser = DNSMessageParser(raw_forward_response)
             print(f'Length of answers: {len(forward_response_parser.message.answers)}')
+            print(f'Raw answer bytes from forward server: {forward_response_parser.message.raw_answer_bytes}')
             if forward_response_parser.message.answers:
                 print(f'From forward server, maion name: {forward_response_parser.message.answers[0].preamble.domain_name}')
                 original_message.add_message_answer(forward_response_parser.message.answers[0])
