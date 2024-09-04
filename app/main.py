@@ -385,11 +385,12 @@ def handle_dns_query(server_udp_socket, buffer: bytes, source, resolver):
             raw_forward_response, _ = server_udp_socket.recvfrom(512)
 
             forward_response_parser = DNSMessageParser(raw_forward_response)
-            print(f'In forward response message, number of answer records: {forward_response_parser.message.header.answer_record_count}')
-            print(f'In forward response message, domain name in answer record: {forward_response_parser.message.answers[0].preamble.domain_name}')
-            print(f'In forward response message, IP address in answer record: {forward_response_parser.message.answers[0].ip}')
+            if forward_response_parser.message.answers:
+                print(f'In forward response message, number of answer records: {forward_response_parser.message.header.answer_record_count}')
+                print(f'In forward response message, domain name in answer record: {forward_response_parser.message.answers[0].preamble.domain_name}')
+                print(f'In forward response message, IP address in answer record: {forward_response_parser.message.answers[0].ip}')
 
-            original_message.add_message_answer(forward_response_parser.message.answers[0])
+                original_message.add_message_answer(forward_response_parser.message.answers[0])
 
         response: bytes = DNSMessageEncoder.encode_message(original_message)
 
