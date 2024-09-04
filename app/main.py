@@ -393,8 +393,8 @@ def handle_dns_query(server_udp_socket, buffer: bytes, source, resolver):
             forward_response_parser = DNSMessageParser(raw_forward_response)
             # print(f'Length of answers: {len(forward_response_parser.message.answers)}')
             # print(f'Raw answer bytes from forward server: {forward_response_parser.raw_answer_bytes}')
+            print(f'INSIDE LOOP ADDING ANSWER, answer count: {forward_response_parser.message.header.answer_record_count}')
             if forward_response_parser.message.answers:
-                print(f'INSIDE LOOP ADDING ANSWER, answer count: {forward_response_parser.message.header.answer_record_count}')
                 # print(f'From forward server, maion name: {forward_response_parser.message.answers[0].preamble.domain_name}')
                 original_message.add_message_answer(forward_response_parser.message.answers[0])
 
