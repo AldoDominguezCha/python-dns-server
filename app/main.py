@@ -366,6 +366,8 @@ def handle_dns_query(server_udp_socket, buffer: bytes, source, resolver):
         parser = DNSMessageParser(buffer)
         original_message = parser.message
 
+        print(f'In original message received, ID: {original_message.header.packet_id}')
+
         # Set up the response message properties
         original_message.header.query_or_response_indicator = 1
         original_message.header.authoritative_answer = 0
