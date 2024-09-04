@@ -276,27 +276,35 @@ class DNSRecordPreamble:
         self.TTL = time_to_live
         self.data_length = data_length
 
-def handle_dns_query(server_udp_socket, buffer: bytes, source):
-    print('In handle_dns_query, parsed resolver argument: ' + args.resolver)
+def handle_dns_query(server_udp_socket, buffer: bytes, source, resolver):
+    try:
+        resolver_ip, resolver_port = resolver.split(':', 1)
+        resolver_address = (resolver_ip, resolver_port)
 
-    parser = DNSMessageParser(buffer)
-    message = parser.message
+        print(f'Resolver address found: {resolver_address}')
+        
+        parser = DNSMessageParser(buffer)
+        message = parser.message
 
-    # Set up the response message properties
-    message.header.query_or_response_indicator = 1
-    message.header.authoritative_answer = 0
-    message.header.truncation = 0
-    message.header.recursion_available = 0
-    message.header.reserved = 0
-    message.header.response_code = 0 if not message.header.operation_code else 4
+        # Set up the response message properties
+        message.header.query_or_response_indicator = 1
+        message.header.authoritative_answer = 0
+        message.header.truncation = 0
+        message.header.recursion_available = 0
+        message.header.reserved = 0
+        message.header.response_code = 0 if not message.header.operation_code else 4
 
-    # "Reply" to each question issued by the client: Mimic every queried domain name in the request providing a mock IP to it
-    for question in message.questions:
-        message.add_message_answer(DNSRecord(DNSRecordPreamble(question.domain_name, 1, 1, 60, 4), '8.8.8.8'))
+        # "Reply" to each question issued by the client: Mimic every queried domain name in the request providing a mock IP to it
+        for question in message.questions:
+            message.add_message_answer(DNSRecord(DNSRecordPreamble(question.domain_name, 1, 1, 60, 4), '8.8.8.8'))
 
-    response: bytes = DNSMessageEncoder.encode_message(message)
+        response: bytes = DNSMessageEncoder.encode_message(message)
 
-    server_udp_socket.sendto(response, source)
+        server_udp_socket.sendto(response, source)
+
+    except Exception as e:
+        print(f"Error handling DNS query: {e}")
+        break
 
 def main():
     parser = argparse.ArgumentParser()
@@ -313,7 +321,7 @@ def main():
             try:
                 buf, source = udp_socket.recvfrom(512)
                 # TODO: How to handle exceptions inside the ThreadPoolExecutor
-                executor.submit(handle_dns_query, udp_socket, buf, source)
+                executor.submit(handle_dns_query, udp_socket, buf, source, args.resolver)
                 
             except Exception as e:
                 print(f"Error receiving data: {e}")
