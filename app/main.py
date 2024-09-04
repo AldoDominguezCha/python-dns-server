@@ -378,6 +378,7 @@ def handle_dns_query(server_udp_socket, buffer: bytes, source, resolver):
 
         # The forward server only allos a single question in the query per UDP message
         for question in original_message.questions:
+            print('INSIDE FOR LOOP')
             forward_query_message = DNSMessage(original_message.header.packet_id)
             forward_query_message.add_message_question(question)
 
