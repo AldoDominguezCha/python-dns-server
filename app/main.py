@@ -93,7 +93,7 @@ class DNSMessageParser(object):
 
         self.parse_header()
         pointer = self.parse_questions(self.message.header.question_count)
-        self.parse_answer_records(pointer)
+        self.parse_answer_records(pointer, self.message.header.answer_record_count)
     
     @property
     def message(self):
