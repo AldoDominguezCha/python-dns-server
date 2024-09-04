@@ -316,7 +316,7 @@ def handle_dns_query(server_udp_socket, buffer: bytes, source, resolver):
 
         # Forward query
         server_udp_socket.sendto(DNSMessageEncoder.encode_message(message), resolver_address)
-        raw_forward_response, _ = udp_socket.recvfrom(512)
+        raw_forward_response, _ = server_udp_socket.recvfrom(512)
 
         print(f'Raw response form forward server: {raw_forward_response}')
 
