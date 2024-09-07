@@ -404,6 +404,8 @@ def handle_dns_query(server_udp_socket, buffer: bytes, source, resolver):
                 # print(f'From forward server, maion name: {forward_response_parser.message.answers[0].preamble.domain_name}')
                 original_message.add_message_answer(forward_response_parser.message.answers[0])
 
+        print(f'At the end, original message answers: {original_message.answers}')
+        original_message.header.answer_record_count = 2
         response: bytes = DNSMessageEncoder.encode_message(original_message)
 
         server_udp_socket.sendto(response, source)
