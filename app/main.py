@@ -394,6 +394,8 @@ def handle_dns_query(server_udp_socket, buffer: bytes, source, resolver):
             resolver_socket.sendto(DNSMessageEncoder.encode_message(forward_query_message), resolver_address)
             raw_forward_response, _ = resolver_socket.recvfrom(512)
 
+            print(f'Raw forward response: {raw_forward_response}')
+
             forward_response_parser = DNSMessageParser(raw_forward_response)
             # print(f'Length of answers: {len(forward_response_parser.message.answers)}')
             # print(f'Raw answer bytes from forward server: {forward_response_parser.raw_answer_bytes}')
