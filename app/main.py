@@ -378,9 +378,6 @@ def handle_dns_query(server_udp_socket, buffer: bytes, source, resolver):
         original_message.header.reserved = 0
         original_message.header.response_code = 0 if not original_message.header.operation_code else 4
 
-        if len(original_message.questions) > 1:
-            original_message.questions[0], original_message.questions[1] = original_message.questions[1], original_message.questions[0]
-
         # The forward server only allos a single question in the query per UDP message
         print(f'Original message questions length: {len(original_message.questions)}')
         for question in original_message.questions:
