@@ -379,8 +379,8 @@ def handle_dns_query(server_udp_socket, buffer: bytes, source, resolver):
         original_message.header.reserved = 0
         original_message.header.response_code = 0 if not original_message.header.operation_code else 4
 
-        if len(original_message.questions) == 2:
-            original_message.questions[1].domain_name = original_message.questions[0].domain_name
+        # if len(original_message.questions) == 2:
+        #     original_message.questions[1].domain_name = original_message.questions[0].domain_name
 
 
 
