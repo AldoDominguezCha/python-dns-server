@@ -343,6 +343,9 @@ class DNSQuestion:
         self.domain_name: str = domain_name
         self.record_type: int = record_type
         self.question_class: int = question_class
+
+    def __str__(self):
+        return f'Question -> Domain name: {self.domain_name}. Record Type: {self.record_type}. Question class: {self.question_class}'
         
 
 class DNSRecord:
@@ -382,6 +385,7 @@ def handle_dns_query(server_udp_socket, buffer: bytes, source, resolver):
         c = 1
         for question in original_message.questions:
             print('*'*30)
+            print(question)
             forward_query_message = DNSMessage(c)
             forward_query_message.header.recursion_desired = 1
             forward_query_message.add_message_question(question)
