@@ -383,9 +383,10 @@ def handle_dns_query(server_udp_socket, buffer: bytes, source, resolver):
 
         # The forward server only allos a single question in the query per UDP message
         print(f'Original message questions length: {len(original_message.questions)}')
+        c = 1
         for question in original_message.questions:
             print('*'*30)
-            forward_query_message = DNSMessage(original_message.header.packet_id)
+            forward_query_message = DNSMessage(c)
             forward_query_message.header.recursion_desired = 0
             forward_query_message.add_message_question(question)
 
@@ -403,6 +404,8 @@ def handle_dns_query(server_udp_socket, buffer: bytes, source, resolver):
 
             if forward_response_parser.message.answers:
                 original_message.add_message_answer(forward_response_parser.message.answers[0])
+            
+            c += 1
 
         response: bytes = DNSMessageEncoder.encode_message(original_message)
 
