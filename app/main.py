@@ -425,7 +425,7 @@ def main():
     while True:
         try:
             buf, source = udp_socket.recvfrom(512)
-            console.log(f'The resolver argument we have: {args.resolver}')
+            print(f'The resolver argument we have: {args.resolver}')
             handle_dns_query(udp_socket, buf, source, args.resolver)
         except Exception as e:
             print(f"Error handling DNS query: {e}")
