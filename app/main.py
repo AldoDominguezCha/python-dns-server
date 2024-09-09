@@ -368,8 +368,6 @@ def handle_dns_query(server_udp_socket, buffer: bytes, source, resolver):
         parser = DNSMessageParser(buffer)
         original_message = parser.message
 
-        print(f'In original message received, ID: {original_message.header.packet_id}')
-
         # Set up the response message properties
         original_message.header.query_or_response_indicator = 1
         original_message.header.authoritative_answer = 0
@@ -394,16 +392,10 @@ def handle_dns_query(server_udp_socket, buffer: bytes, source, resolver):
             print(f'Raw forward response: {raw_forward_response}')
 
             forward_response_parser = DNSMessageParser(raw_forward_response)
-            # print(f'Length of answers: {len(forward_response_parser.message.answers)}')
-            # print(f'Raw answer bytes from forward server: {forward_response_parser.raw_answer_bytes}')
-            print(f'INSIDE LOOP ADDING ANSWER, answer count: {forward_response_parser.message.header.answer_record_count}')
-            print(f'INSIDE LOOP ADDING ANSWER, answers: {forward_response_parser.message.answers}')
+
             if forward_response_parser.message.answers:
-                # print(f'From forward server, maion name: {forward_response_parser.message.answers[0].preamble.domain_name}')
                 original_message.add_message_answer(forward_response_parser.message.answers[0])
 
-        print(f'At the end, original message answers: {original_message.answers}')
-        original_message.header.answer_record_count = 2
         response: bytes = DNSMessageEncoder.encode_message(original_message)
 
         server_udp_socket.sendto(response, source)
