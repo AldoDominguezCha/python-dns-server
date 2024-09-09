@@ -422,13 +422,12 @@ def main():
     udp_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     udp_socket.bind(("127.0.0.1", 2053))
     
-    with ThreadPoolExecutor(max_workers=None) as executor:
-        while True:
-            try:
-                buf, source = udp_socket.recvfrom(512)
-                handle_dns_query(udp_socket, buf, source, args.resolver)
-            except Exception as e:
-                print(f"Error handling DNS query: {e}")
+    while True:
+        try:
+            buf, source = udp_socket.recvfrom(512)
+            handle_dns_query(udp_socket, buf, source, args.resolver)
+        except Exception as e:
+            print(f"Error handling DNS query: {e}")
 
 
 if __name__ == "__main__":
