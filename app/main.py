@@ -389,14 +389,15 @@ def handle_dns_query(server_udp_socket, buffer: bytes, source, resolver):
             forward_query_message.header.recursion_desired = 0
             forward_query_message.add_message_question(question)
 
-            print(f'Question count in forward message: {forward_query_message.header.question_count}')
-            print(f'Domain name in question: {forward_query_message.questions[0].domain_name}')
             resolver_socket.sendto(DNSMessageEncoder.encode_message(forward_query_message), resolver_address)
             raw_forward_response, _ = resolver_socket.recvfrom(512)
 
             print(f'Raw forward response: {raw_forward_response}')
 
             forward_response_parser = DNSMessageParser(raw_forward_response)
+
+            print(f'Question count in forward server response: {forward_response_parser.message.header.question_count}')
+            print(f'Answer record count in forward server response: {forward_response_parser.message.header.answer_record_count}')
 
             if forward_response_parser.message.answers:
                 original_message.add_message_answer(forward_response_parser.message.answers[0])
