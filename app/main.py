@@ -389,6 +389,8 @@ def handle_dns_query(server_udp_socket, buffer: bytes, source, resolver):
             forward_query_message.header.recursion_desired = 0
             forward_query_message.add_message_question(question)
 
+            print(f'Query message sent to forward server: {DNSMessageEncoder.encode_message(forward_query_message)}')
+
             resolver_socket.sendto(DNSMessageEncoder.encode_message(forward_query_message), resolver_address)
             raw_forward_response, _ = resolver_socket.recvfrom(512)
 
