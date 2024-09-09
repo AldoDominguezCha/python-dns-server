@@ -179,7 +179,7 @@ class DNSMessageParser(object):
                 # At this pointe we found a pointer to a compressed label sequence (the pointer to a label sequence that has appeared already), we've parsed it
                 # but we still need to append at the beginning all the labels we found for the current question before we found the compression pointer,
                 # we could have something like {{ REGULAR_LABEL }}.{{ COMPRESSION_POINTER }}
-                question.domain_name = '.'.join(domain_name_slices) + question.domain_name
+                question.domain_name = '.'.join(domain_name_slices) + '.' + question.domain_name
 
                 return (question, pointer_after_offset)
             
