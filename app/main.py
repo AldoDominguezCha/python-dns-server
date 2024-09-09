@@ -383,7 +383,7 @@ def handle_dns_query(server_udp_socket, buffer: bytes, source, resolver):
         for question in original_message.questions:
             print('*'*30)
             forward_query_message = DNSMessage(c)
-            forward_query_message.header.recursion_desired = 0
+            forward_query_message.header.recursion_desired = 1
             forward_query_message.add_message_question(question)
 
             print(f'Query message sent to forward server: {DNSMessageEncoder.encode_message(forward_query_message)}')
