@@ -377,7 +377,7 @@ def handle_dns_query(server_udp_socket, buffer: bytes, source, resolver):
         original_message.header.response_code = 0 if not original_message.header.operation_code else 4
 
         # Remove this after testing
-        if original_message.questions.length == 2:
+        if len(original_message.questions) == 2:
             original_message.questions[0], original_message.questions[1] = original_message.questions[1], original_message.questions[0]
 
 
