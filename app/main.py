@@ -418,7 +418,7 @@ def handle_dns_query(server_udp_socket, buffer: bytes, source, resolver):
     except Exception as e:
         print(f"Error handling DNS query: {e}")
 
-def forward_query(resolver_address, message) -> bytes:
+# def forward_query(resolver_address, message) -> bytes:
 
 
 def main():
