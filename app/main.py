@@ -408,6 +408,7 @@ def handle_dns_query(server_udp_socket, buffer: bytes, source, resolver):
                 forward_query_counter += 1
         
         else:
+            continue
 
 
         response: bytes = DNSMessageEncoder.encode_message(message)
