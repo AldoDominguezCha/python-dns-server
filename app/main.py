@@ -176,7 +176,7 @@ class DNSMessageParser(object):
                 question, _ = self.parse_question(int(offset, base=2))
                 pointer_after_offset = pointer + 2
 
-                # At this pointe we found a pointer to a compressed label sequence (the pointer to a label sequence that has appeared already), we've parsed it
+                # At this point we found a pointer to a compressed label sequence (the pointer to a label sequence that has appeared already), we've parsed it
                 # but we still need to append at the beginning all the labels we found for the current question before we found the compression pointer,
                 # we could have something like {{ REGULAR_LABEL }}.{{ COMPRESSION_POINTER }}
                 question.domain_name = '.'.join(domain_name_slices) + '.' + question.domain_name
@@ -232,13 +232,13 @@ class DNSMessageParser(object):
                 offset  = format(int.from_bytes(self.__raw_message[pointer : pointer + 2]), '016b')
                 # We remove the MSB of the two bytes that conform the pointer, these are just flags, not actually part of the pointer
                 offset = '00' + offset[2:]
-                answer, _ = self.parse_question(int(offset, base=2))
+                answer, _ = self.parse_answer_record(int(offset, base=2))
                 pointer_after_offset = pointer + 2
 
                 # At this pointe we found a pointer to a compressed label sequence (the pointer to a label sequence that has appeared already), we've parsed it
                 # but we still need to append at the beginning all the labels we found for the current question before we found the compression pointer,
                 # we could have something like {{ REGULAR_LABEL }}.{{ COMPRESSION_POINTER }}
-                answer.preamble.domain_name = '.'.join(domain_name_slices) + question.domain_name
+                answer.preamble.domain_name = '.'.join(domain_name_slices) + '.' + question.domain_name
 
                 return (answer, pointer_after_offset)
 
@@ -364,59 +364,61 @@ class DNSRecordPreamble:
 
 def handle_dns_query(server_udp_socket, buffer: bytes, source, resolver):
     try:
-        resolver_ip, resolver_port = resolver.split(':', 1)
-        resolver_address = (resolver_ip, int(resolver_port))
-        resolver_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        
         parser = DNSMessageParser(buffer)
-        original_message = parser.message
+        message = parser.message
 
         # Set up the response message properties
-        original_message.header.query_or_response_indicator = 1
-        original_message.header.authoritative_answer = 0
-        original_message.header.truncation = 0
-        original_message.header.recursion_available = 0
-        original_message.header.reserved = 0
-        original_message.header.response_code = 0 if not original_message.header.operation_code else 4
+        message.header.query_or_response_indicator = 1
+        message.header.authoritative_answer = 0
+        message.header.truncation = 0
+        message.header.recursion_available = 0
+        message.header.reserved = 0
+        message.header.response_code = 0 if not message.header.operation_code else 4
 
-        # if len(original_message.questions) == 2:
-        #     original_message.questions[1].domain_name = original_message.questions[0].domain_name
+        # If a resolver address argument has been provided, we need to forward the questions received in the query message
+        # to a different resolver server
+        if resolver:
+            resolver_ip, resolver_port = resolver.split(':', 1)
+            resolver_address = (resolver_ip, int(resolver_port))
+            resolver_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+
+            print(f'Socket has attribute __enter__: {hasattr(resolver_socket, '__enter__')}')
+            print(f'Socket has attribute __exit__: {hasattr(resolver_socket, '__exit__')}')
+
+            # The forward server only allows a single question in the query per UDP message,
+            # split every question in the original message into its own forward message
+            forward_query_counter = 1
+            for question in message.questions:
+                forward_query_message = DNSMessage(forward_query_counter)
+                forward_query_message.add_message_question(question)
+
+                resolver_socket.sendto(DNSMessageEncoder.encode_message(forward_query_message), resolver_address)
+                raw_forward_response, _ = resolver_socket.recvfrom(512)
+
+                forward_response_parser = DNSMessageParser(raw_forward_response)
+
+                # The forward server should only reply with an answer record per query message sent
+                if forward_response_parser.message.header.answer_record_count == 1:
+                    message.add_message_answer(forward_response_parser.message.answers[0])
+                else:
+                    # Set error response code. RCODE:2 -> SERVFAIL (Server failed to complete the DNS request)
+                    message.header.response_code = 2
+                    break
+                
+                forward_query_counter += 1
+        
+        else:
 
 
-
-        # The forward server only allos a single question in the query per UDP message
-        print(f'Original message questions length: {len(original_message.questions)}')
-        c = 1
-        for question in original_message.questions:
-            print('*'*30)
-            print(question)
-            forward_query_message = DNSMessage(c)
-            forward_query_message.header.recursion_desired = 1
-            forward_query_message.add_message_question(question)
-
-            print(f'Query message sent to forward server: {DNSMessageEncoder.encode_message(forward_query_message)}')
-
-            resolver_socket.sendto(DNSMessageEncoder.encode_message(forward_query_message), resolver_address)
-            raw_forward_response, _ = resolver_socket.recvfrom(512)
-
-            print(f'Raw forward response: {raw_forward_response}')
-
-            forward_response_parser = DNSMessageParser(raw_forward_response)
-
-            print(f'Question count in forward server response: {forward_response_parser.message.header.question_count}')
-            print(f'Answer record count in forward server response: {forward_response_parser.message.header.answer_record_count}')
-
-            if forward_response_parser.message.answers:
-                original_message.add_message_answer(forward_response_parser.message.answers[0])
-            
-            c += 1
-
-        response: bytes = DNSMessageEncoder.encode_message(original_message)
+        response: bytes = DNSMessageEncoder.encode_message(message)
 
         server_udp_socket.sendto(response, source)
 
     except Exception as e:
         print(f"Error handling DNS query: {e}")
+
+def forward_query(resolver_address, message) -> bytes:
+
 
 def main():
     parser = argparse.ArgumentParser()
@@ -429,7 +431,6 @@ def main():
     while True:
         try:
             buf, source = udp_socket.recvfrom(512)
-            print(f'The resolver argument we have: {args.resolver}')
             handle_dns_query(udp_socket, buf, source, args.resolver)
         except Exception as e:
             print(f"Error handling DNS query: {e}")
