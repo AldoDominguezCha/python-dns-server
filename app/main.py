@@ -1,7 +1,6 @@
 from __future__ import annotations
 import argparse
 import socket
-from concurrent.futures import ThreadPoolExecutor
 
 # Constants section TODO: Move to its own module
 HEADER_LENGTH_IN_BYTES = 12
